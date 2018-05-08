@@ -31,14 +31,16 @@ public class Game {
 				grid[row][column] = Shapes.VOID;
 			}
 		}
-		playGame();
 	}
 	
-	private void playGame() throws Exception {
+	public void playGame() throws Exception {
 		//Play a game of Tic Tac Toe
 		
 		printGrid();
 		placeShape();
+		printGrid();
+		
+		
 	}
 	
 	private void placeShape() throws Exception {
@@ -57,8 +59,8 @@ public class Game {
 			input = reader.readLine();
 			
 			if(input.length() == 3) {
-				x = (int) input.charAt(0);
-				y = (int) input.charAt(2);
+				x = Integer.parseInt(input.substring(0, 1));
+				y = Integer.parseInt(input.substring(2, 3));
 				
 				if(x >= 0 && x < 3 && y >= 0 && y < 3) {
 					//Edit coordinate input to conform to setup of grid
@@ -140,5 +142,6 @@ public class Game {
 		//Instantiate a game
 		
 		Game game = new Game();
+		game.playGame();
 	}
 }
