@@ -22,6 +22,12 @@ public class Game {
 	 * direction. y is horizontal and positive in the right direction. */
 	Shapes[][] grid = new Shapes[3][3];
 	
+	
+	/** This array keeps track of the chances to win when choosing
+	 *  Each tile on the grid. */
+	int[][] winChances = new int[3][3];
+	
+	
 	Game() throws Exception {
 		//Default constructor
 		
@@ -40,7 +46,28 @@ public class Game {
 		placeShape();
 		printGrid();
 		
+		while(findWinner() == Shapes.VOID) {
+			
+			startGen(cloneGrid(grid));
+			choosePlay();
+			printGrid();
+			placeShape();
+		}
 		
+	}
+	
+	private Shapes[][] cloneGrid(Shapes[][] grid) {
+		//Create a clone of the inputted grid
+		
+		Shapes[][] gridClone = new Shapes[3][3];
+		
+		for(int row = 0; row < gridClone.length; row++) {
+			for(int tile = 0; tile < gridClone[row].length; tile++) {
+				gridClone[row][tile] = grid[row][tile];
+			}
+		}
+		
+		return gridClone;
 	}
 	
 	private void placeShape() throws Exception {
@@ -136,6 +163,65 @@ public class Game {
 			}
 			System.out.println("\n+---+---+---+");
 		}
+	}
+	
+	private void startGen(Shapes[][] grid) {
+		//Start the recursive generation every possible state of the board
+		
+		for(int row = 0; row < grid.length; row++) {
+			for(int tile = 0; tile < grid[row].length; tile++) {
+				
+				winChances[row][tile] = 0; //Return win chanes to zero
+				
+				if(grid[row][tile].equals(Shapes.VOID)) {
+					grid[row][tile] = Shapes.O;
+					genPossibilities(cloneGrid(grid), false, row, tile);
+				}
+			}
+		}
+	}
+	
+	private void genPossibilities(Shapes[][] grid,
+				boolean cpuTurn, int originalX, int originalY) {
+		//Recursively generate every state of the board
+		
+		if(findWinner().equals(Shapes.X)) {
+			winChances[originalX][originalY]--;
+			return;
+		} else if(findWinner().equals(Shapes.O)) {
+			winChances[originalX][originalY]++;
+			return;
+		}
+		
+		for(int row = 0; row < grid.length; row++) {
+			for(int tile = 0; tile < grid[row].length; tile++) {
+				if(grid[row][tile].equals(Shapes.VOID) && cpuTurn) {
+					grid[row][tile] = Shapes.O;
+					genPossibilities(cloneGrid(grid), !cpuTurn, originalX, originalY);
+				} else if(grid[row][tile].equals(Shapes.VOID) && !cpuTurn) {
+					grid[row][tile] = Shapes.X;
+					genPossibilities(cloneGrid(grid), !cpuTurn, originalX, originalY);
+				}
+			}
+		}
+	}
+	
+	private void choosePlay() {
+		//Chooses the best plac to place an O considering the chances
+		
+		int[] highestChance = new int[2];
+		
+		for(int row = 0; row < winChances.length; row++) {
+			for(int tile = 0; tile < winChances[row].length; tile++) {
+				if(winChances[row][tile] >
+				winChances[highestChance[0]][highestChance[1]]) {
+					highestChance[0] = row;
+					highestChance[1] = tile;
+				}
+			}
+		}
+		
+		grid[highestChance[0]][highestChance[1]] = Shapes.O;
 	}
 	
 	public static void main(String[] args) throws Exception {
