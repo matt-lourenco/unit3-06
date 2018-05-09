@@ -24,17 +24,18 @@ public class Game {
 	
 	
 	/** This array keeps track of the chances to win when choosing
-	 *  Each tile on the grid. */
+	 *  Each tile on the grid. 0 default. 1 win. 2 lose. 3 tie.*/
 	int[][] winChances = new int[3][3];
 	
 	
 	Game() throws Exception {
 		//Default constructor
 		
-		//Fill grid with void
+		//Fill grid with void and chances with true
 		for(int row = 0; row < grid.length; row++) {
 			for(int column = 0; column < grid[row].length; column++) {
 				grid[row][column] = Shapes.VOID;
+				winChances[row][column] = 0;
 			}
 		}
 	}
@@ -42,15 +43,28 @@ public class Game {
 	public void playGame() throws Exception {
 		//Play a game of Tic Tac Toe
 		
-		printGrid();
+		printGrid(grid);
 		placeShape();
-		printGrid();
+		printGrid(grid);
 		
-		while(findWinner() == Shapes.VOID) {
+		int filledTiles = 0;
+		
+		while(findWinner(grid) == Shapes.VOID && filledTiles < 9) {
+			
+			//Check if a tie has been reached
+			filledTiles = 0;
+			
+			for(Shapes[] row: grid) {
+				for(Shapes tile: row) {
+					if(!tile.equals(Shapes.VOID)) {
+						filledTiles++;
+					}
+				}
+			}
 			
 			startGen(cloneGrid(grid));
 			choosePlay();
-			printGrid();
+			printGrid(grid);
 			placeShape();
 		}
 		
@@ -108,7 +122,7 @@ public class Game {
 		grid[-1*y + 2][x] = Shapes.X;
 	}
 	
-	private Shapes findWinner() {
+	private Shapes findWinner(Shapes[][] grid) {
 		//Finds the winner on the board
 		
 		if(grid[0][0].equals(grid[0][1]) &&
@@ -148,7 +162,7 @@ public class Game {
 		}
 	}
 	
-	private void printGrid() {
+	private void printGrid(Shapes[][] grid) {
 		//Prints the grid
 		System.out.println("+---+---+---+");
 		
@@ -174,54 +188,65 @@ public class Game {
 				winChances[row][tile] = 0; //Return win chanes to zero
 				
 				if(grid[row][tile].equals(Shapes.VOID)) {
-					grid[row][tile] = Shapes.O;
-					genPossibilities(cloneGrid(grid), false, row, tile);
+					Shapes[][] gridClone = cloneGrid(grid);
+					gridClone[row][tile] = Shapes.O;
+					genPossibilities(gridClone, 2, false, row, tile);
 				}
 			}
 		}
 	}
 	
-	private void genPossibilities(Shapes[][] grid,
+	private void genPossibilities(Shapes[][] grid, int tilesFilled,
 				boolean cpuTurn, int originalX, int originalY) {
 		//Recursively generate every state of the board
 		
-		if(findWinner().equals(Shapes.X)) {
+		if(tilesFilled == 9 && findWinner(grid).equals(Shapes.VOID)) {
+			return;
+		} else if(findWinner(grid).equals(Shapes.X)) {
 			winChances[originalX][originalY]--;
 			return;
-		} else if(findWinner().equals(Shapes.O)) {
-			winChances[originalX][originalY]++;
+		} else if(findWinner(grid).equals(Shapes.O)) {
 			return;
 		}
 		
 		for(int row = 0; row < grid.length; row++) {
 			for(int tile = 0; tile < grid[row].length; tile++) {
 				if(grid[row][tile].equals(Shapes.VOID) && cpuTurn) {
-					grid[row][tile] = Shapes.O;
-					genPossibilities(cloneGrid(grid), !cpuTurn, originalX, originalY);
+					Shapes[][] gridClone = cloneGrid(grid);
+					gridClone[row][tile] = Shapes.O;
+					genPossibilities(gridClone, ++tilesFilled,
+							!cpuTurn, originalX, originalY);
 				} else if(grid[row][tile].equals(Shapes.VOID) && !cpuTurn) {
-					grid[row][tile] = Shapes.X;
-					genPossibilities(cloneGrid(grid), !cpuTurn, originalX, originalY);
+					Shapes[][] gridClone = cloneGrid(grid);
+					gridClone[row][tile] = Shapes.X;
+					genPossibilities(gridClone, ++tilesFilled,
+							!cpuTurn, originalX, originalY);
 				}
 			}
 		}
 	}
 	
 	private void choosePlay() {
-		//Chooses the best plac to place an O considering the chances
+		//Chooses the play that has the highest chance of success
 		
-		int[] highestChance = new int[2];
+		int[] chance = new int[2];
 		
 		for(int row = 0; row < winChances.length; row++) {
 			for(int tile = 0; tile < winChances[row].length; tile++) {
-				if(winChances[row][tile] >
-				winChances[highestChance[0]][highestChance[1]]) {
-					highestChance[0] = row;
-					highestChance[1] = tile;
+				
+				System.out.println(winChances[row][tile]);
+				
+				if(grid[row][tile].equals(Shapes.VOID) && 
+						winChances[row][tile] > winChances[chance[0]][chance[1]]) {
+					chance[0] = row;
+					chance[1] = tile;
 				}
 			}
 		}
 		
-		grid[highestChance[0]][highestChance[1]] = Shapes.O;
+		if(grid[chance[0]][chance[1]].equals(Shapes.VOID)) {
+			grid[chance[0]][chance[1]] = Shapes.O;
+		}
 	}
 	
 	public static void main(String[] args) throws Exception {
