@@ -54,7 +54,6 @@ public class Game {
 		
 		printGrid(grid);
 		placeShape();
-		printGrid(grid);
 		
 		int filledTiles = 1;
 		boolean cpuTurn = true;
