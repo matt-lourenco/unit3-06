@@ -12,9 +12,18 @@ import java.io.InputStreamReader;
 public class Game {
 	
 	private enum Shapes {
-		VOID,
-		O,
-		X;
+		VOID (0),
+		O (-1),
+		X (1);
+		
+		int score;
+		
+		Shapes(int inScore) {
+			//Sets the score related to each shape
+			score = inScore;
+		}
+		
+		private int getScore() { return score; } //Getter
 	}
 	
 	/** This is a grid of shapes used in a Tic Tac Toe game. The computer is
@@ -132,32 +141,48 @@ public class Game {
 	private Shapes findWinner(Shapes[][] grid) {
 		//Finds the winner on the board
 		
-		if(grid[0][0] == grid[0][1] && grid[0][0] == grid[0][2] &&
-				grid[0][0] != Shapes.VOID) {
+		if(grid[0][0] == grid[0][1] && grid[0][0] == grid[0][2] && grid[0][0] != Shapes.VOID) {
 			return grid[0][0];
-		} else if(grid[1][0] == grid[1][1] && grid[1][0] == grid[1][2] &&
-				grid[1][0] != Shapes.VOID) {
+		} else if(grid[1][0] == grid[1][1] && grid[1][0] == grid[1][2] && grid[1][0] != Shapes.VOID) {
 			return grid[1][0];
-		} else if(grid[2][0] == grid[2][1] && grid[2][0] == grid[2][2] &&
-				grid[2][0] != Shapes.VOID) {
+		} else if(grid[2][0] == grid[2][1] && grid[2][0] == grid[2][2] && grid[2][0] != Shapes.VOID) {
 			return grid[2][0];
-		} else if(grid[0][0] == grid[1][0] && grid[0][0] == grid[2][0] &&
-				grid[0][0] != Shapes.VOID) {
+		} else if(grid[0][0] == grid[1][0] && grid[0][0] == grid[2][0] && grid[0][0] != Shapes.VOID) {
 			return grid[0][0];
-		} else if(grid[0][1] == grid[1][1] && grid[0][1] == grid[2][1] &&
-				grid[0][1] != Shapes.VOID) {
+		} else if(grid[0][1] == grid[1][1] && grid[0][1] == grid[2][1] && grid[0][1] != Shapes.VOID) {
 			return grid[0][1];
-		} else if(grid[0][2] == grid[1][2] && grid[0][2] == grid[2][2] &&
-				grid[0][2] != Shapes.VOID) {
+		} else if(grid[0][2] == grid[1][2] && grid[0][2] == grid[2][2] && grid[0][2] != Shapes.VOID) {
 			return grid[0][2];
-		} else if(grid[0][0] == grid[1][1] && grid[0][0] == grid[2][2] &&
-				grid[0][0] != Shapes.VOID) {
+		} else if(grid[0][0] == grid[1][1] && grid[0][0] == grid[2][2] && grid[0][0] != Shapes.VOID) {
 			return grid[0][0];
-		} else if(grid[0][2] == grid[1][1] && grid[0][2] == grid[2][0] &&
-				grid[0][2] != Shapes.VOID) {
+		} else if(grid[0][2] == grid[1][1] && grid[0][2] == grid[2][0] && grid[0][2] != Shapes.VOID) {
 			return grid[0][2];
 		} else {
 			return Shapes.VOID;
+		}
+	}
+	
+	private boolean userClose(Shapes[][] grid) {
+		//Finds if the winner a turn away from winning
+		
+		if(grid[0][0].getScore() + grid[0][1].getScore() + grid[0][2].getScore() == 2) {
+			return true;
+		} else if(grid[1][0].getScore() + grid[1][1].getScore() + grid[1][2].getScore() == 2) {
+			return true;
+		} else if(grid[2][0].getScore() + grid[2][1].getScore() + grid[2][2].getScore() == 2) {
+			return true;
+		} else if(grid[0][0].getScore() + grid[1][0].getScore() + grid[2][0].getScore() == 2) {
+			return true;
+		} else if(grid[0][1].getScore() + grid[1][1].getScore() + grid[2][1].getScore() == 2) {
+			return true;
+		} else if(grid[0][2].getScore() + grid[1][2].getScore() + grid[2][2].getScore() == 2) {
+			return true;
+		} else if(grid[0][0].getScore() + grid[1][1].getScore() + grid[2][2].getScore() == 2) {
+			return true;
+		} else if(grid[0][2].getScore() + grid[1][1].getScore() + grid[2][0].getScore() == 2) {
+			return true;
+		} else {
+			return false;
 		}
 	}
 	
@@ -200,12 +225,21 @@ public class Game {
 		//Recursively generate every state of the board
 		
 		//Check if a winner was decided
-		if(tilesFilled == 9 && findWinner(grid) == Shapes.VOID ||
-				findWinner(grid) == Shapes.O) {
+		if(tilesFilled == 9 && findWinner(grid) == Shapes.VOID) {
 			return;
-		} else if(findWinner(grid) == Shapes.X) {
+		}
+		//return if cpu wins
+		if(findWinner(grid) == Shapes.O) {
+			return;
+		}
+		//reduced win chances if user wins
+		if(findWinner(grid) == Shapes.X) {
 			winChances[originalX][originalY] -= 9 - tilesFilled;
 			return;
+		}
+		//prioritize blocking the user
+		if(userClose(grid) && cpuTurn) {
+			winChances[originalX][originalY] += 9 - tilesFilled;
 		}
 		
 		//If no winner has been decided, clone the grid and check the next move
@@ -240,9 +274,6 @@ public class Game {
 					chance[0] = row;
 					chance[1] = tile;
 				}
-				
-				System.out.println(winChances[row][tile]);
-				
 				if(grid[row][tile] == Shapes.VOID && 
 						winChances[row][tile] > winChances[chance[0]][chance[1]]) {
 					chance[0] = row;
